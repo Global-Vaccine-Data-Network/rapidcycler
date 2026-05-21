@@ -15,11 +15,11 @@ the simple, scalable, and reusable functionality that the package
 provides.
 
 **Before using *rapidcycler*, it is essential to understand the
-underlying framework.** Full details can be found in this manuscript:
-Rapid Cycle Analysis (RCA) for Vaccine Safety Surveillance across a
-Global Network: A Scalable Framework for Collaborative Multi-Country
-Near Real-Time Monitoring (preprint expected imminently - contact
-package author for details).
+underlying framework.** Full details can be found in this manuscript
+(preprint): [Rapid Cycle Analysis (RCA) for Vaccine Safety Surveillance
+across a Global Network: A Scalable Framework for Collaborative
+Multi-Country Near Real-Time
+Monitoring](http://ssrn.com/abstract=6799072).
 
 Version 1.0+ (current release) of the package includes functionality to
 validate and aggregate line list data into a de-identified format for

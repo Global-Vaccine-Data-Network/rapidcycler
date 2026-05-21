@@ -1,0 +1,148 @@
+# Getting Started
+
+This package supports both **multi-site** and **single-site**
+implementations of RCA. In a multi-site study, sites only need to run
+data aggregation — the coordinating centre handles analysis and result
+dissemination. In a single-site local implementation, a single
+organisation runs the full workflow independently.
+
+Before using *rapidcycler*, it is essential to understand the underlying
+GVDN RCA framework. Full details can be found in this preprint: Rapid
+Cycle Analysis (RCA) for Vaccine Safety Surveillance across a Global
+Network: A Scalable Framework for Collaborative Multi-Country Near
+Real-Time Monitoring.
+
+The key requirements to begin data aggregation are:
+
+- An options.txt file
+
+- 3 input datasets
+
+- Cycle and study dates
+
+- Study design selection
+
+These will be briefly covered below, with further details available in
+the manuscript linked above.
+
+### options.txt
+
+The options.txt file is a plain-text configuration file that controls
+how aggregate_data() runs for your study module. It contains study-level
+settings that remain fixed across all sites for the duration of the
+study: the analysis period structure, the AESI of interest and their
+codes, the vaccine codes, and the parameters of each study design.
+
+Under a multi-site study, the coordinating centre provides the
+options.txt for your study module and this should not be edited. For a
+single-site study, you are responsible for creating your own
+options.txt. See the dedicated section in the ‘Articles’ tab for more
+information on how to do this, or run
+[`vignette("options", "rapidcycler")`](https://global-vaccine-data-network.github.io/rapidcycler/articles/options.md).
+
+### Cycle and study dates
+
+When aggregating the data it is necessary to specify the cycle start and
+end dates. It is also necessary to know the study start date when
+extracting data from your own sources into the required input datasets
+(below).
+
+The study start date is usually the date the vaccine in question is
+first given in the source population. This will also correspond to the
+first cycle start date. The end date of the cycle will be determined by
+your chosen cycle length (e.g. monthly).
+
+As the study progresses, your cycle dates will progress contiguously
+through time, however the study start date remains fixed. Note that
+there will be a delay between the cycle finishing and the data being
+aggregated, to allow the data for that cycle to accrue in your sources -
+the length of this delay depends on the accrual lag within your data
+sources and how you intend to handle this lag.
+
+### Input datasets
+
+From your own data sources you need to obtain 3 data.table objects,
+containing information on persons, vaccinations, and AESI outcomes.
+
+The required input dataset structures are summarised below. For a
+detailed description of each column and its validation rules, see the
+relevant ‘Articles’ section or run
+[`vignette("validate", "rapidcycler")`](https://global-vaccine-data-network.github.io/rapidcycler/articles/validate.md).
+
+***person_data***
+
+Contains person details. Persons must be in the cohort for at least part
+of the current cycle - that is, birth or entry to the cohort before the
+cycle end, and death or exit from the cohort after the cycle start.
+
+| Column name | Column type | Description |
+|:---|:---|:---|
+| **PID** | character | Individual or person-level identifier, often pseudo-anonymised |
+| **DOB** | 8 digit integer YYYYMMDD | Date of birth of person |
+| **SEX** | character | The biological sex at birth of the person |
+| **ENROL_DATE** | 8 digit integer YYYYMMDD | Date the person entered the cohort from which they are eligible for inclusion in the study (independent of study dates). If eligible from birth, can be set to NA and will default to DOB |
+| **CENSOR_DATE** | 8 digit integer YYYYMMDD | Date the person left the cohort from which they are no longer eligible for inclusion in the study (independent of study dates). Set to NA if the person remains in the cohort |
+| **CENSOR_TYPE** | character | Type of censoring, if censored (missing, dead, travelled, or emigrated) |
+
+***vaccination_data***
+
+Contains vaccination details for individuals in *person_data*.
+Vaccinations must have occurred between the start of the **study period
+(not cycle)** and end of the current cycle - as such, the size of the
+vaccination input dataset may grow over time. Vaccinations can be split
+into 2 levels - type and subtype (e.g. platform and brand). Each type
+may contain multiple subtypes, but must be mutually exclusive. Only
+subtypes are required to be specified in the input dataset, with the
+mapping to each type specified in options.txt.
+
+| Column name | Column type | Description |
+|:---|:---|:---|
+| **PID** | character | Individual or person-level identifier, often pseudo-anonymised |
+| **V_DATE** | 8 digit integer YYYYMMDD | Date of vaccination |
+| **V_SUBTYPE** | character | Code specifying the brand/subtype of vaccine given |
+
+***outcome_data***
+
+Contains AESI outcome details for individuals in *person_data*. Outcomes
+must have occurred between the start of the **lookback period (not
+cycle)** and end of the current cycle - as such, the size of the outcome
+input dataset may grow over time. Unless otherwise specified, the
+lookback period covers the 2 years prior to the study start date
+(configurable via `lookback_length` in options.txt).
+
+| Column name | Column type | Description |
+|:---|:---|:---|
+| **PID** | character | Individual or person-level identifier, often pseudo-anonymised |
+| **AESI** | character | Short name of AESI outcome. Must match codes in options.txt |
+| **EVENT_DATE** | 8 digit integer | Diagnosis date through healthcare providers |
+| **ENCOUNTER_TYPE** | numeric | Source of the diagnosis information from healthcare setting (e.g. inpatient). If part of multi-site implementation, coordinating centre will provide a list of these |
+
+### Study design selection
+
+There are 5 study designs available in this package, requiring different
+sources of information (see manuscript for details):
+
+1.  Self-controlled design with post-vaccination control window
+    (`self_post`)
+
+2.  Self-controlled design with pre-vaccination control window
+    (`self_pre`)
+
+3.  Cohort design with concurrent vaccinated comparator
+    (`concurrent_vac`)
+
+4.  Cohort design with historic comparator (`historical`)
+
+5.  Cohort design with concurrent unvaccinated comparator
+    (`concurrent_vac`)
+
+These designs are heirarchical in nature - that is, if you can
+participate in design 4, then you can also participate in designs 1-3 -
+however design selection is fully flexible, allowing specification of
+any combination of designs.
+
+### Next steps
+
+Once you have an understanding of the underlying framework and your own
+study-specific parameters, continue on to the ‘Aggregating data’ article
+to learn more about the data aggregation functionality.

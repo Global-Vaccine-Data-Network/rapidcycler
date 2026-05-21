@@ -1,0 +1,367 @@
+# The options.txt configuration file
+
+## Overview
+
+The `options.txt` file is a plain-text configuration file that controls
+how
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md)
+runs for your study module. It contains study-level settings that remain
+fixed for the duration of the study: the analysis period structure, the
+outcomes of interest, the vaccine codes, and the parameters of each
+study design.
+
+How you obtain or create your `options.txt` depends on how the package
+is being used:
+
+- **Multi-site implementation**: the coordinating centre provides the
+  `options.txt` for your study module. You should use the file provided
+  without modification — it encodes the agreed study protocol and
+  ensures all sites use consistent settings. Contact your study
+  coordinator if you have not yet received it.
+- **Single-site implementation**: there is no coordinating centre. You
+  are responsible for creating your own `options.txt`. Use the annotated
+  template in this package as a starting point (see below).
+
+This vignette documents the file format and every field, so that you
+can:
+
+- verify that the file you have received is correct and complete,
+- understand how each setting influences the aggregation output, and
+- create a valid file from scratch for a single-site study.
+
+A copy of the annotated template can be opened in R at any time:
+
+``` r
+
+file.show(system.file("extdata", "options_template.txt", package = "rapidcycler"))
+```
+
+------------------------------------------------------------------------
+
+## File format
+
+`options.txt` is a plain-text file. Each setting occupies one line in
+`key: value` format:
+
+    study_codename: COVID
+    period_length: month
+
+Multi-value fields have space-separated values on a single line:
+
+    outcome_info.AESI: ADEM MYO ST
+    outcome_info.risk_upper: 42 28 42
+
+Lines beginning with `#`, or lines that do not match any recognised key,
+are ignored. Section headers using the `---- Header ----` convention are
+also ignored. This means you can annotate your file freely without
+affecting how it is parsed.
+
+The file must be named exactly **`options.txt`** and saved in the
+directory supplied to `options_file_location` in
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md).
+
+------------------------------------------------------------------------
+
+## Complete field reference
+
+### Study settings
+
+#### `study_codename`
+
+A short identifier for this study module. It is embedded in the output
+folder name (e.g. `RCA_COVID_SITE_20250101-20250131`) and in the
+`notes.txt` metadata file.
+
+    study_codename: COVID
+
+#### `period_length`
+
+The data from each cycle is automatically split into periods of this
+length. This length can be the same as the cycle length, or be an exact
+divisor of the cycle length if you would like to be able to see more
+granularity in your aggregated data. It does not effect the sequential
+analysis - each cycle is still treated as a single look at the data even
+if split into multiple periods - unless instructed to do so for the
+purpose of a retrospective-style analysis.
+
+It should be specified in the form: `month`, `week`, `day`, `2 months`,
+`2 weeks`, `2 days`, etc
+
+    period_length: month
+
+#### `align_periods`
+
+Whether to align periods to calendar boundaries (`TRUE`) or use
+fixed-length windows measured from the cycle start (`FALSE`).
+
+With `TRUE` and `period_length: month`, the first period runs from the
+cycle start to the end of that calendar month, and subsequent periods
+follow calendar months exactly. This is useful for the first cycle,
+which aligns with the study start date and therefore is unlikely to
+perfectly align with the start of a month. This feature only works for a
+monthly period length.
+
+With `FALSE`, each period is exactly one `period_length` in duration
+regardless of calendar boundaries.
+
+    align_periods: TRUE
+
+#### `lookback_length`
+
+The length of the outcome lookback period in **years**, measured back
+from the study start date. Outcomes occurring within this window are
+used to identify non-incident outcome that occur during the study
+period, which are then excluded from analysis.
+
+This field is optional. If omitted, a default of 2 years is applied. If
+provided, it must be a positive number.
+
+    lookback_length: 2
+
+> **Note:** Sites whose outcome data does not extend back the full
+> `lookback_length` will receive a warning at validation and aggregation
+> time, and the opportunity to specify the earliest date to which a
+> lookback period can be applied. Aggregation can then continue. The
+> date provided is stored in the notes.txt file to allow an appropriate
+> caveat to be added during interpretation of results.
+
+#### `ratio_precision`
+
+The number of decimal places retained in ratio output columns. The
+recommended is at least 3.
+
+    ratio_precision: 3
+
+#### `included_analyses`
+
+A space-separated list of sub-analysis types to produce within each
+study design output, allowing stratification of results by vaccine type,
+subtype, dose number, or combinations thereof.
+
+| Value | Vaccine stratification | Dose stratification |
+|:---|:---|:---|
+| `primary` | All vaccines pooled | All doses pooled |
+| `subgroup_dose` | All vaccines pooled | By dose number (overall) |
+| `subgroup_platform` | By vaccine type (`V_TYPE`) | All doses pooled |
+| `subgroup_platform_dose` | By vaccine type (`V_TYPE`) | By dose number within type |
+| `subgroup_brand` | By vaccine subtype (`V_SUBTYPE`) | All doses pooled |
+| `subgroup_brand_dose` | By vaccine subtype (`V_SUBTYPE`) | By dose number within subtype |
+
+All six values are typically included. Removing a value reduces output
+volume but also reduces the granularity of results available for
+analysis.
+
+    included_analyses: primary subgroup_dose subgroup_platform subgroup_platform_dose subgroup_brand subgroup_brand_dose
+
+------------------------------------------------------------------------
+
+### Age groups
+
+Age groups apply to all study designs, dividing the cohort into strata
+for stratified output tables. Age groups, along with sex, are critical
+for adjustment during analysis.
+
+#### `age_groups.bounds`
+
+Space-separated age boundaries in years. Must start with `0` and end
+with `Inf`. N boundary values define N−1 age groups.
+
+#### `age_groups.labels`
+
+Space-separated labels for each age group. The number of labels must
+equal the number of boundaries minus one (i.e. the number of groups).
+
+    age_groups.bounds: 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 Inf
+    age_groups.labels: 0-4 5-9 10-14 15-19 20-24 25-29 30-34 35-39 40-44 45-49 50-54 55-59 60-64 65-69 70-74 75-79 80+
+
+------------------------------------------------------------------------
+
+### Outcome settings
+
+The `outcome_info` fields are **parallel vectors** — each position
+corresponds to one AESI. All `outcome_info.*` fields must have the same
+number of values as `outcome_info.AESI`. All time values are in
+**days**.
+
+#### `outcome_info.AESI`
+
+Short codes for the Adverse Events of Special Interest included in this
+study. These codes must match the values found in `outcome_data$AESI`.
+
+    outcome_info.AESI: ADEM MYO ST
+
+#### `outcome_info.clean_window`
+
+The minimum number of days before an event required to classify it as
+incident. If a prior event of the same AESI occurred within this many
+days before the current event, the current event is excluded as a
+prevalent case.
+
+    outcome_info.clean_window: 365 183 365
+
+#### `outcome_info.risk_lower` and `outcome_info.risk_upper`
+
+The start and end of the post-vaccination risk window in days. Day 0 is
+the day of vaccination, day 1 the day after vaccination, and so on.
+Events occurring within `[risk_lower, risk_upper]` days of a vaccination
+are attributed to the vaccine.
+
+    outcome_info.risk_lower: 1  1  2
+    outcome_info.risk_upper: 42 28 42
+
+#### `outcome_info.washout_post` and `outcome_info.washout_pre`
+
+Days immediately after the risk window (`washout_post`) or before
+vaccination (`washout_pre`) that are excluded from the analysis. These
+buffers can be used to reduce misclassification bias and the effect of
+event-dependent exposures, respectively.
+
+    outcome_info.washout_post: 7 7 7
+    outcome_info.washout_pre:  7 7 7
+
+#### `outcome_info.control_post_target` and `outcome_info.control_pre_target`
+
+These are relevant only to the self controlled study designs. They
+determine the target ratio of control time to risk window length, for
+the post-vaccination and pre-vaccination control windows respectively.
+
+For example, a `control_post_target` of `1` means the algorithm attempts
+to allocate a control period equal in length to the risk window. A value
+of `3` means it attempts three times the risk window length. Actual
+lengths may vary in the presence of multiple vaccine doses or other
+censoring.
+
+    outcome_info.control_post_target: 1 1 1
+    outcome_info.control_pre_target:  3 3 3
+
+#### `outcome_info.control_post_min` and `outcome_info.control_pre_min`
+
+These are relevant only to the self controlled study designs. They
+determine the minimum target control period length in days. This
+overrides the target ratios above for AESI with very short risk windows.
+
+    outcome_info.control_post_min: 30 30 30
+    outcome_info.control_pre_min:  30 30 30
+
+------------------------------------------------------------------------
+
+### Vaccine settings
+
+The `vaccine_info` fields are **parallel vectors** — each position pairs
+a subtype with its corresponding type. Both fields must have the same
+number of values.
+
+#### `vaccine_info.vaccine_subtypes`
+
+Vaccine subtype codes as they appear in `vaccination_data$V_SUBTYPE`.
+These represent the finest level of vaccine classification — typically a
+specific brand, formulation, or product name.
+
+#### `vaccine_info.vaccine_types`
+
+The broader vaccine type (platform) corresponding to each subtype above
+— for example, the delivery mechanism (mRNA, viral vector, protein
+subunit). Multiple subtypes may share the same type.
+
+    vaccine_info.vaccine_subtypes: ABC DEF GHI
+    vaccine_info.vaccine_types:    mRNA mRNA VVA
+
+------------------------------------------------------------------------
+
+## Complete example
+
+The following is a complete, valid `options.txt` file. Values are
+illustrative — in a multi-site study, use the file provided by the
+coordinating centre; in a single-site study, adapt this template to your
+study.
+
+    ---- Analysis options ----
+    study_codename: COVID
+    lookback_length: 2
+    period_length: month
+    align_periods: TRUE
+    ratio_precision: 3
+    included_analyses: primary subgroup_dose subgroup_platform subgroup_platform_dose subgroup_brand subgroup_brand_dose
+    age_groups.bounds: 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 Inf
+    age_groups.labels: 0-4 5-9 10-14 15-19 20-24 25-29 30-34 35-39 40-44 45-49 50-54 55-59 60-64 65-69 70-74 75-79 80+
+    outcome_info.AESI: ADEM MYO ST
+    outcome_info.clean_window: 365 183 365
+    outcome_info.risk_lower: 1 1 2
+    outcome_info.risk_upper: 42 28 42
+    outcome_info.washout_post: 7 7 7
+    outcome_info.washout_pre: 7 7 7
+    outcome_info.control_post_target: 1 1 1
+    outcome_info.control_pre_target: 3 3 3
+    outcome_info.control_post_min: 30 30 30
+    outcome_info.control_pre_min: 30 30 30
+    vaccine_info.vaccine_subtypes: ABC DEF GHI
+    vaccine_info.vaccine_types: mRNA mRNA VVA
+
+------------------------------------------------------------------------
+
+## Reading the file in R
+
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md)
+reads `options.txt` automatically when `options_file_location` is
+provided. You can also read and inspect the parsed options object
+directly:
+
+``` r
+
+options <- rapidcycler:::read_options_file("~/Documents/RCA/STUDY/SUBSTUDY")
+str(options)
+```
+
+This returns a named list, which can be passed directly to
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md)
+via the `options` argument (useful when you need to run multiple cycles
+without re-reading the file each time):
+
+``` r
+
+aggregate_data(
+  ...,
+  options = options,
+  options_file_location = NULL  # required when passing options object directly
+)
+```
+
+------------------------------------------------------------------------
+
+## Deprecated field names
+
+Sites upgrading from earlier versions of *rapidcycler* may have
+`options.txt` files using older field names. These are still accepted
+with a warning:
+
+| Deprecated key                    | Current key                     |
+|:----------------------------------|:--------------------------------|
+| `outcome_info.case_ascertainment` | `outcome_info.clean_window`     |
+| `vaccine_info.vaccine_brands`     | `vaccine_info.vaccine_subtypes` |
+| `vaccine_info.vaccine_platforms`  | `vaccine_info.vaccine_types`    |
+
+Updating to the current names removes the warning.
+
+------------------------------------------------------------------------
+
+## Troubleshooting
+
+**`Options file (options.txt) not found at the location given.`** The
+file does not exist at the path supplied to `options_file_location`.
+Check that the file is named exactly `options.txt` (not
+`options (1).txt` or similar) and that the directory path is correct.
+
+**`Options object not in the correct format.`** A required field is
+missing or has the wrong type. Check that all `outcome_info.*` fields
+have the same number of values as `outcome_info.AESI`, and that both
+`vaccine_info` fields have the same length.
+
+**Warning:
+`The outcome_info.case_ascertainment key in options.txt is deprecated.`**
+Rename `outcome_info.case_ascertainment` to `outcome_info.clean_window`
+in your file.
+
+**Warning:
+`The vaccine_info.vaccine_brands key in options.txt is deprecated.`**
+Rename `vaccine_info.vaccine_brands` to `vaccine_info.vaccine_subtypes`
+in your file.

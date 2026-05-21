@@ -1,0 +1,378 @@
+# Aggregation
+
+The primary function for aggregation is
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md).
+You can view the full documentation using
+[`?aggregate_data`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md)
+or
+[`help("aggregate_data")`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md).
+A few key things to note:
+
+- Requires input data in the format described in the ‘Getting started’
+  article
+
+- If the `vaccination_data` input is set to `NULL`, the function will
+  ignore your `design_selection` and perform historical data aggregation
+  instead.
+
+- The input datasets are saved and removed from the global environment
+  during aggregation, but restored afterwards by default (see
+  `restore_input_data` parameter). They can also be restored manually
+  using the
+  [`recombine_input_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/recombine_input_data.md)
+  function. Once aggregation is complete, the saved versions of the
+  input datasets are deleted. If you would like to store the input
+  datasets that were used, please do so manually whilst they are still
+  in your global environment.
+
+- Validation of the input datasets is run automatically before
+  aggregation is started. If any issues are found, aggregation will be
+  aborted and the issues printed in the console. These issues will need
+  to be fixed before aggregation can be completed. Validation can also
+  be run separately - see Advanced usage section at the end of this
+  document.
+
+- There is no output from the function, however it will create a new
+  folder with the name format
+  “RCA\_\[STUDY_CODENAME\]\_\[SITE_CODE\]\_\[CYCLE_START\]-\[CYCLE_END\]”,
+  at the location specified by `working_directory`, and save the
+  aggregated tables within it. In a multi-site study, this folder should
+  be zipped and shared with the coordinating centre. Output files are
+  written in **Parquet format** by default
+  (`output_format = "parquet"`), which is readable in R via
+  [`arrow::read_parquet()`](https://arrow.apache.org/docs/r/reference/read_parquet.html),
+  Python, and SQL engines. Use `output_format = "csv"` for csv output.
+
+- Requires an ‘options.txt’ file to run - in a multi-site study this is
+  provided by the coordinating centre; in a single-site study you create
+  it yourself. It should be saved in an appropriate location (specified
+  by `options_file_location`), and the same file used for the duration
+  of the study (one options file per study module). For a full
+  description of the file format and every configurable field, see the
+  relevant article or run
+  [`vignette("options", "rapidcycler")`](https://global-vaccine-data-network.github.io/rapidcycler/articles/options.md).
+
+### Set up for examples
+
+Load the package:
+
+``` r
+
+library(rapidcycler)
+```
+
+If you would like to use synthetic data to run the examples, you can
+generate and load it directly:
+
+``` r
+
+synth <- generate_synthetic_data(pop_size = 100000)
+person_data     <- synth$person_data
+vaccination_data <- synth$vaccination_data
+outcome_data    <- synth$outcome_data
+```
+
+By default,
+[`generate_synthetic_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/generate_synthetic_data.md)
+also saves `person_data.csv`, `vaccination_data.csv`, and
+`outcome_data.csv` to the current working directory
+(`save_data = TRUE`). To load previously saved files:
+
+``` r
+
+person_data      <- data.table::fread("person_data.csv")
+vaccination_data <- data.table::fread("vaccination_data.csv")
+outcome_data     <- data.table::fread("outcome_data.csv")
+```
+
+### Example: Default usage
+
+There are 6 required inputs for the function, and several optional
+inputs that will revert to a default if not specified.
+
+The code below will create a new folder in your current working
+directory, given by [`getwd()`](https://rdrr.io/r/base/getwd.html).
+There must also be an ‘options.txt’ file saved in this location.
+
+``` r
+
+# Assuming person_data, vaccination_data, and outcome_data are data.table objects already loaded into the global environment
+aggregate_data(person_data, vaccination_data, outcome_data,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE")
+# design_selection defaults to NULL, which runs all 5 analytical designs (plus descriptives always)
+```
+
+### Example: Study designs
+
+The `design_selection` parameter controls which study designs are
+aggregated (see manuscript for details). By default
+(`design_selection = NULL`) all five designs are run. You can pass a
+character vector of design names to run a specific subset, from the
+following 5 options:
+
+`"self_post"` \| Self-controlledpost-vaccination control window \|  
+`"self_pre"` \| Self-controlled pre-vaccination control window\|  
+`"historical"` \| Cohort design with historic comparator\|  
+`"concurrent_vac"` \| Cohort design with concurrent vaccinatedcomparator
+group \|  
+`"concurrent_unvac"` \| Cohort design with concurrentunvaccinated
+comparator group \|
+
+Descriptive outcomes and vaccination datasets are **always produced**
+for non-historical aggregations and are not controlled by
+`design_selection`. These contain raw counts of outcomes and
+vaccinations for the cycle.
+
+``` r
+
+# Run only the self-controlled designs
+aggregate_data(person_data, vaccination_data, outcome_data,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE",
+               design_selection = c("self_pre", "self_post"))
+```
+
+### Example: Aggregation of historical data
+
+The aggregation function can also be used to do a one-off aggregation of
+historical data, necessary for the cohort design with historic
+comparator. Simply provide historical person_data and outcome_data
+datasets to the
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md)
+function, with `vaccination_data = NULL`, and it will aggregate them
+appropriately. When `vaccination_data = NULL`, the `design_selection` is
+ignored and two output files are produced instead: `data_historic_cases`
+(outcome counts by period, age group, sex, AESI, and encounter type) and
+`data_historic_person_days` (person-days by period, age group, and sex).
+
+``` r
+
+# Aggregate historical data
+aggregate_data(person_data, vaccination_data = NULL, outcome_data,
+               cycle_start_date = as.Date("2017-01-01"),
+               cycle_end_date = as.Date("2024-12-31"),
+               site_code = "TEST_SITE")
+```
+
+### Example: Using different locations
+
+There are two important file locations within the function:
+
+- `options_file_location`: this is where the ‘options.txt’ file is
+  stored (in local memory)
+
+- `working_directory`: this is where a new folder will be created,
+  within which aggregated tables are saved
+
+Both these inputs will default to the current working directory, given
+by [`getwd()`](https://rdrr.io/r/base/getwd.html), if not specified. To
+use a different location, you can either change your current working
+directory using [`setwd()`](https://rdrr.io/r/base/getwd.html) (both
+locations will be the same), or use these inputs to specify different
+locations (as in the recommended folder structure).
+
+``` r
+
+# Assuming person_data, vaccination_data, and outcome_data are data.table objects already loaded into the global environment
+aggregate_data(person_data, vaccination_data, outcome_data,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE",
+               options_file_location = "~/Documents/RCA/STUDY/SUBSTUDY/",
+               working_directory = "~/Documents/RCA/STUDY/SUBSTUDY/data")
+```
+
+### Example: Memory considerations
+
+#### Insufficient RAM
+
+If you find that you are running out of RAM during execution of the
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md)
+function, or execution is very slow, you can restrict the amount of data
+that is aggregated at one time using the `split_size` input. The
+function splits the input data into portions of size `split_size`
+according to `PID`, stores the split datasets in a subfolder called
+‘data’, aggregates one split at a time, and then recombines and performs
+the final aggregation once all splits are complete. The default is
+500,000, and should be lowered if memory is an issue. If you have large
+amounts of RAM, increasing the split size may also speed up aggregation.
+**NOTE: you should still input the whole datasets - the function will
+handle the splitting itself**.
+
+``` r
+
+# Assuming person_data, vaccination_data, and outcome_data are data.table objects already loaded into the global environment
+aggregate_data(person_data, vaccination_data, outcome_data,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE",
+               split_size = 100000)
+```
+
+#### Input datasets too large
+
+**NOTE: only use this method if your input datasets are so large that it
+is not possible to load them into R in one go**. If so, you can divide
+the data into chunks before aggregating. If you do so, you must specify
+`input_data_in_chunks = TRUE`. The data should be divided into chunks by
+`PID`, so that all the records associated with a person are included in
+the same chunk. The temporary results from each chunk will be stored
+until the last chunk is aggregated (specified using
+`final_chunk = TRUE`), after which the temporary results will be
+combined and the final aggregation performed.
+
+In this case, you will need to call the
+[`aggregate_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/aggregate_data.md)
+function multiple times. Each time, you should pass only a single chunk
+of each dataset, therefore, requires loading a new chunk of input data
+(either from a saved file or directly from the database) before each
+function call.
+
+The example below assumes that the input datasets are split into 2
+chunks, and there exists code to retrieve these chunks from a saved file
+or directly from the database.
+
+``` r
+
+person_data_chunk1 <- load_person_data_chunk1()
+vaccination_data_chunk1 <- load_vaccination_data_chunk1()
+outcome_data_chunk1 <- load_outcome_data_chunk1()
+
+aggregate_data(person_data_chunk1, vaccination_data_chunk1, outcome_data_chunk1,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE",
+               input_data_in_chunks = TRUE,
+               final_chunk = FALSE) # FALSE until final chunk
+
+# Remove data from memory (can also do this automatically by setting 'restore_input_data = FALSE' in function call)
+rm("person_data_chunk1", "vaccination_data_chunk1", "outcome_data_chunk1")
+
+person_data_chunk2 <- load_person_data_chunk2()
+vaccination_data_chunk2 <- load_vaccination_data_chunk2()
+outcome_data_chunk2 <- load_outcome_data_chunk2()
+
+aggregate_data(person_data_chunk2, vaccination_data_chunk2, outcome_data_chunk2,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE",
+               input_data_in_chunks = TRUE,
+               final_chunk = TRUE) # TRUE to trigger final aggregation
+
+# Remove data from memory (can also do this automatically by setting 'restore_input_data = FALSE' in function call)
+rm("person_data_chunk2", "vaccination_data_chunk2", "outcome_data_chunk2")
+```
+
+**IMPORTANT - do not combine fully aggregated tables together, as this
+will not produce correctly aggregated tables. Dealing with the input
+data in chunks must be performed in the way described above**
+
+### Example: Stopping and restarting aggregation
+
+It is possible to stop the aggregation and restart at a later time. You
+can stop aggregation by manually interrupting execution, or by using the
+`stop_after_n_splits` input. Either way, aggregation can be resumed from
+where it was stopped. Note that, if you stop aggregation by manually
+interrupting execution, the input datasets will not be restored to the
+global environment afterwards. However, they are saved in the ‘data’
+subfolder (in split format) ready for resumption, and can be restored to
+the global environment using the
+[`recombine_input_data()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/recombine_input_data.md)
+function.
+
+The example below will stop aggregation after 2 splits of the input
+datasets have been aggregated (note, this will aggregate those splits
+across all time periods and study designs).
+
+``` r
+
+# Assuming person_data, vaccination_data, and outcome_data are data.table objects already loaded into the global environment
+aggregate_data(person_data, vaccination_data, outcome_data,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE",
+               stop_after_n_splits = 2)
+```
+
+The simplest way to resume aggregation is by using the
+[`resume_cycle_aggregation()`](https://global-vaccine-data-network.github.io/rapidcycler/reference/resume_cycle_aggregation.md)
+function:
+
+``` r
+
+resume_cycle_aggregation(folder_name = "RCA_COVID_TEST_SITE_20250101-20250131", 
+                         working_directory = "~/Documents/RCA/STUDY/SUBSTUDY/data")
+
+# NOTE: also optional arguments stop_after_n_splits, input_data_in_chunks, and final_chunk, that behave in the same way as previously described
+```
+
+### Output files
+
+When aggregation completes, the results folder contains one file per
+output dataset plus a `notes.txt` metadata file.
+
+**Non-historical aggregation** (vaccination data provided):
+
+| File | Produced when | Contents |
+|:---|:---|:---|
+| `data_descriptive_outcomes.parquet` | Always | Outcome counts by period, age group, sex, and encounter type |
+| `data_descriptive_vaccinations.parquet` | Always | Vaccination counts by period, age group, sex, vaccine subtype, type, and dose |
+| `data_self_post.parquet` | `"self_post"` in `design_selection` | Risk / control counts and window ratios using post-vaccination control window |
+| `data_self_pre.parquet` | `"self_pre"` in `design_selection` | Risk / control counts and window ratios using pre-vaccination control window |
+| `data_exposed_cases.parquet` | `"historical"` in `design_selection` | Outcome counts in the post-vaccination risk window for vaccinated persons |
+| `data_exposed_person_days.parquet` | `"historical"` in `design_selection` | Person-days in the post-vaccination risk window for vaccinated persons |
+| `data_concurrent_vac.parquet` | `"concurrent_vac"` in `design_selection` | Risk / control counts and group ratios using vaccinated comparator group |
+| `data_concurrent_unvac.parquet` | `"concurrent_unvac"` in `design_selection` | Risk / control counts and group ratios using unvaccinated comparator group |
+| `notes.txt` | Always | Metadata: cycle dates, site code, study designs run, options settings, and descriptive statistics |
+
+**Historical aggregation** (`vaccination_data = NULL`):
+
+| File | Contents |
+|:---|:---|
+| `data_historic_cases.parquet` | Outcome counts by period, age group, sex, AESI, and encounter type |
+| `data_historic_person_days.parquet` | Person-days by period, age group, and sex |
+| `notes.txt` | Metadata: cycle dates, site code, options settings, and descriptive statistics |
+
+For non-historical aggregation, files excluded via `design_selection`
+will not be present in the folder.
+
+If `output_format = "csv"` is used, files will have `.csv` extensions
+instead.
+
+Output files can be read back into R using:
+
+``` r
+
+library(arrow)
+results <- arrow::read_parquet("RCA_STUDY_TEST_SITE_20250101-20250131/data_self_post.parquet")
+```
+
+### Example: Suppression of small counts
+
+To protect against re-identification, counts below a minimum threshold
+can be suppressed before the results folder is shared. Use the
+`suppression_limit` parameter to set this threshold. Any count strictly
+less than `suppression_limit` (but greater than zero) will be replaced
+with `-1` in the output.
+
+Note that suppression will significantly hinder the ability to use the
+aggregated data for sequential analysis, so should be avoided or
+minimised as much as possible.
+
+Suppression applies to the `COUNT`, `CASE_COUNT`, `CONTROL_COUNT`, and
+`PERSON_DAYS` columns across all output files where present. Zero counts
+are never suppressed. Only primary suppression is performed - the
+ability to reconstruct a low count based on its surrounding cells is not
+considered.
+
+``` r
+
+aggregate_data(person_data, vaccination_data, outcome_data,
+               cycle_start_date = as.Date("2025-01-01"),
+               cycle_end_date = as.Date("2025-01-31"),
+               site_code = "TEST_SITE",
+               suppression_limit = 5) # suppress counts of 1-4
+```

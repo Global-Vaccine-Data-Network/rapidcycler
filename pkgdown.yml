@@ -1,0 +1,12 @@
+pandoc: 3.8.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  aggregate: aggregate.html
+  getting_started: getting_started.html
+  options: options.html
+  validate: validate.html
+last_built: 2026-05-21T06:10Z
+urls:
+  reference: https://global-vaccine-data-network.github.io/rapidcycler/reference
+  article: https://global-vaccine-data-network.github.io/rapidcycler/articles

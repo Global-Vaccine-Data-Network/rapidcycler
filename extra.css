@@ -1,0 +1,349 @@
+/* =============================================================
+   GVDN Brand Stylesheet — rapidcycler pkgdown documentation
+   Global Vaccine Data Network | Murdoch Children's Research Institute
+   ============================================================= */
+
+/* ── CSS Custom Properties ─────────────────────────────────── */
+:root {
+  --gvdn-navy:       #1A3055;
+  --gvdn-navy-light: #2B4B7E;
+  --gvdn-cyan:       #3DD9D9;
+  --gvdn-cyan-dark:  #0B6E80;
+  --gvdn-cyan-pale:  #EBF9F9;
+  --gvdn-grey:       #F5F7FA;
+  --gvdn-border:     #DEE2E6;
+  --gvdn-muted:      #6C757D;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────── */
+.navbar {
+  background-color: var(--gvdn-navy) !important;
+  border-bottom: 3px solid var(--gvdn-cyan);
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+  color: #fff !important;
+}
+
+/* Scope to the fixed top navbar only — avoids affecting the in-article
+   TOC sidebar, which also uses .navbar-nav .nav-link internally. */
+.navbar.fixed-top .nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+  transition: color 0.15s;
+  padding: 0.4rem 0.75rem;
+}
+
+.navbar.fixed-top .nav-link:hover,
+.navbar.fixed-top .nav-link:focus,
+.navbar.fixed-top .nav-link.active {
+  color: var(--gvdn-cyan) !important;
+}
+
+/* Dropdown: override Bootstrap 5 dark-theme variables so the menu
+   renders with a white background and legible dark text. */
+.navbar-nav .dropdown-menu {
+  --bs-dropdown-bg: #ffffff;
+  --bs-dropdown-color: var(--gvdn-navy);
+  --bs-dropdown-link-color: var(--gvdn-navy);
+  --bs-dropdown-link-hover-color: var(--gvdn-navy);
+  --bs-dropdown-link-hover-bg: var(--gvdn-cyan-pale);
+  --bs-dropdown-header-color: var(--gvdn-muted);
+  background-color: var(--bs-dropdown-bg);
+  border-top: 2px solid var(--gvdn-cyan);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.navbar-nav .dropdown-item {
+  color: var(--gvdn-navy);
+  font-weight: 400;
+  padding: 0.45rem 1.2rem;
+}
+
+.navbar-nav .dropdown-item:hover,
+.navbar-nav .dropdown-item:focus {
+  background-color: var(--gvdn-cyan-pale);
+  color: var(--gvdn-navy);
+}
+
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Search bar in navbar */
+.form-control.search-input,
+.navbar .form-control {
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.form-control.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Typography ─────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  color: var(--gvdn-navy);
+  font-weight: 600;
+}
+
+/* Section dividers on h2 */
+article h2,
+.page-content h2,
+.template-article h2 {
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--gvdn-cyan);
+  margin-top: 2.25rem;
+}
+
+/* Reference index section titles */
+.ref-index h2,
+.template-reference-index h2 {
+  border-bottom: 2px solid var(--gvdn-cyan);
+  padding-bottom: 0.35rem;
+}
+
+/* ── Links ──────────────────────────────────────────────────── */
+a {
+  color: var(--gvdn-cyan-dark);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--gvdn-navy);
+  text-decoration: underline;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-primary {
+  background-color: var(--gvdn-navy);
+  border-color: var(--gvdn-navy);
+}
+
+.btn-primary:hover {
+  background-color: var(--gvdn-navy-light);
+  border-color: var(--gvdn-navy-light);
+}
+
+/* ── Code Blocks ────────────────────────────────────────────── */
+pre,
+pre.sourceCode,
+div.sourceCode {
+  background-color: var(--gvdn-grey) !important;
+  border-left: 4px solid var(--gvdn-cyan);
+  border-radius: 4px;
+}
+
+code,
+code.sourceCode {
+  color: var(--gvdn-cyan-dark);
+  background-color: var(--gvdn-grey);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-size: 0.875em;
+}
+
+pre code,
+div.sourceCode code {
+  color: inherit;
+  background-color: transparent;
+  padding: 0;
+}
+
+/* R output */
+.r-output {
+  color: var(--gvdn-muted);
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.table thead th {
+  background-color: var(--gvdn-navy);
+  color: #fff;
+  border-color: var(--gvdn-navy);
+  font-weight: 600;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: var(--gvdn-cyan-pale);
+  --bs-table-accent-bg: var(--gvdn-cyan-pale);
+}
+
+.table td,
+.table th {
+  padding: 0.55rem 0.75rem;
+  vertical-align: middle;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar-start {
+  border-right: 1px solid var(--gvdn-border);
+}
+
+.sidebar dt {
+  font-weight: 600;
+  color: var(--gvdn-navy);
+  margin-top: 0.75rem;
+}
+
+.sidebar a {
+  color: var(--gvdn-cyan-dark);
+}
+
+/* ── Home page ──────────────────────────────────────────────── */
+.lead {
+  font-size: 1.1rem;
+  color: var(--gvdn-muted);
+  line-height: 1.75;
+}
+
+/* Hide pkgdown's auto-generated page-header (title text + floated logo) */
+.template-home .page-header {
+  display: none;
+}
+
+/* Hero banner: hex logo left, institutional logos right */
+.hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2.5rem;
+  padding: 0.75rem 0 0.5rem;
+  border-bottom: 1px solid var(--gvdn-border);
+  margin-bottom: 1rem;
+}
+
+.hero-header img.hero-hex {
+  width: 180px;
+  height: auto;
+}
+
+.hero-partners {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.hero-partners a:first-child img {
+  height: 100px;
+  width: auto;
+}
+
+.hero-partners a:last-child img {
+  height: 90px;
+  width: auto;
+  padding: 14px 12px;
+}
+
+.hero-partners a {
+  display: inline-block;
+  transition: opacity 0.2s ease;
+}
+
+.hero-partners a:hover {
+  opacity: 0.8;
+}
+
+/* ── Tabs ───────────────────────────────────────────────────── */
+.nav-tabs .nav-link {
+  color: var(--gvdn-navy) !important;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+  border-bottom-color: var(--gvdn-cyan) !important;
+  color: var(--gvdn-navy) !important;
+  font-weight: 600;
+}
+
+/* ── Form Controls ──────────────────────────────────────────── */
+.form-control:focus {
+  border-color: var(--gvdn-cyan);
+  box-shadow: 0 0 0 0.25rem rgba(61, 217, 217, 0.25);
+}
+
+/* ── Alerts / Callouts ──────────────────────────────────────── */
+.alert-info {
+  background-color: var(--gvdn-cyan-pale);
+  border-color: var(--gvdn-cyan);
+  color: var(--gvdn-navy);
+}
+
+.callout-note {
+  border-left-color: var(--gvdn-cyan);
+}
+
+/* ── pkgdown version badge ──────────────────────────────────── */
+.version.label {
+  background-color: var(--gvdn-cyan);
+  color: var(--gvdn-navy);
+}
+
+/* ── Source link ────────────────────────────────────────────── */
+.source-link a,
+.pull-right .btn {
+  color: var(--gvdn-cyan-dark);
+  border-color: var(--gvdn-border);
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+footer.footer,
+.footer {
+  background-color: var(--gvdn-grey);
+  border-top: 3px solid var(--gvdn-cyan);
+  padding: 2rem 0 1.5rem;
+  color: var(--gvdn-muted);
+  font-size: 0.875rem;
+}
+
+footer.footer a,
+.footer a {
+  color: var(--gvdn-cyan-dark);
+}
+
+footer.footer a:hover,
+.footer a:hover {
+  color: var(--gvdn-navy);
+}
+
+.footer-branding {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.footer-logos {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.footer-logos img {
+  max-height: 45px;
+  width: auto;
+}
+
+.footer-logos a {
+  display: inline-block;
+  transition: opacity 0.2s ease;
+}
+
+.footer-logos a:hover {
+  opacity: 0.8;
+}
+
+.footer-branding p {
+  margin-bottom: 0;
+}

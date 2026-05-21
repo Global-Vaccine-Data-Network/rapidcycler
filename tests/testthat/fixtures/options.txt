@@ -1,0 +1,21 @@
+---- Analysis options (do not edit) ----
+study_codename: COVID
+lookback_length: 2
+period_length: month
+align_periods: TRUE
+ratio_precision: 3
+included_analyses: primary subgroup_dose subgroup_platform subgroup_platform_dose subgroup_brand subgroup_brand_dose
+age_groups.bounds: 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 Inf
+age_groups.labels: 0-4 5-9 10-14 15-19 20-24 25-29 30-34 35-39 40-44 45-49 50-54 55-59 60-64 65-69 70-74 75-79 80+
+  outcome_info.AESI: ADEM MYO ST
+outcome_info.clean_window: 365 183 365
+outcome_info.risk_lower: 1 1 2
+outcome_info.risk_upper: 42 28 42
+outcome_info.washout_post: 7 7 7
+outcome_info.washout_pre: 7 7 7
+outcome_info.control_post_target: 1 1 1
+outcome_info.control_pre_target: 3 3 3
+outcome_info.control_post_min: 30 30 30
+outcome_info.control_pre_min: 30 30 30
+vaccine_info.vaccine_subtypes: ABC DEF GHI
+vaccine_info.vaccine_types: PABC PDEF PGHI

@@ -1,0 +1,10 @@
+bibentry(
+  bibtype  = "Manual",
+  title    = "{rapidcycler}: Rapid Cycle Analysis (RCA) for a Global Network",
+  author   = person(given = "Benjamin David", family = "Atkins",
+                    email   = "ben.atkins@mcri.edu.au",
+                    comment = c(ORCID = "0000-0002-3746-8374")),
+  year     = sub("-.*", "", meta$Date %||% format(Sys.Date(), "%Y")),
+  note     = paste0("R package version ", meta$Version %||% packageVersion("rapidcycler")),
+  url      = "https://global-vaccine-data-network.github.io/rapidcycler/"
+)

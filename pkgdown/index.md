@@ -1,0 +1,182 @@
+<div class="hero-header" style="display:flex;align-items:center;gap:40px;">
+<img src="man/figures/logo.svg" class="hero-hex" width="140" style="vertical-align:middle;" alt="rapidcycler hex logo">
+<div class="hero-partners" style="display:flex;align-items:center;gap:40px;">
+<a href="https://globalvaccinedatanetwork.org/"><img src="man/figures/GVDNlogo.png" height="75" style="vertical-align:middle;" alt="Global Vaccine Data Network"></a>
+<a href="https://www.mcri.edu.au/"><img src="man/figures/MCRIlogo.png" height="52" style="vertical-align:middle;" alt="Murdoch Children's Research Institute"></a>
+</div>
+</div>
+
+
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
+
+
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The *rapidcycler* package underpins the Rapid Cycle Analysis (RCA) framework established by Global Vaccine Data Network (GVDN). It is purpose-built for multi-site, federated implementations of RCA, providing a standardised and efficient pipeline for local data aggregation, allowing data to be shared for combined sequential analysis. However, single-site implementations will also benefit from the simple, scalable, and reusable functionality that the package provides.
+
+**Before using *rapidcycler*, it is essential to understand the underlying framework.** Full details can be found in this manuscript: Rapid Cycle Analysis (RCA) for Vaccine Safety Surveillance across a Global Network: A Scalable Framework for Collaborative Multi-Country Near Real-Time Monitoring (preprint expected imminently - contact package author for details).
+
+Version 1.0+ (current release) of the package includes functionality to validate and aggregate line list data into a de-identified format for sharing. There is also additional functionality to produce synthetic line list data, though this has not been thoroughly tested and as such should only be used for illustrative/testing purposes. Versions 2.0+ (planned for future release) will include functions to perform sequential analysis using maximised sequential probability ratio tests (MaxSPRT), visualise results, and produce reports. Versions 3.0+ will include a Shiny app to aid in the regular communication of results. In a multi-site study, sites are only required to run data aggregation — the coordinating centre handles analysis and result dissemination using the remaining package functionality, which is also available to sites if they wish to use it.
+
+## Installation
+
+You can install *rapidcycler* in two ways:
+
+### 1. Tarball installation
+
+If you are unable to connect to GitHub from within your working environment, this is the method you will use. A single zipped file (tarball) can be downloaded from the package's [GitHub Releases page](https://github.com/Global-Vaccine-Data-Network/rapidcycler/releases) and imported into your environment. This will contain the source code for the package, and can be opened and checked, however should not be edited. Once saved in your environment, the package can be installed with the following command:
+
+
+```r
+# EDIT THE FILE PATH AND NAME AS NECESSARY
+install.packages("~/Documents/rapidcycler_1.3.tar.gz", repos = NULL, type="source")
+```
+
+To update the package, the process of downloading, importing, and installing the tarball must be repeated. 
+
+**NOTE:** If you are working on a Windows machine, you will need to have Rtools installed in order to build the package from the source file. This can be downloaded and installed from here: https://cran.r-project.org/bin/windows/Rtools/ 
+
+### 2. Directly from GitHub
+
+If you are able to connect to GitHub from within your working environment, this method offers a more streamlined way to install and update the package.
+
+
+```r
+devtools::install_github("Global-Vaccine-Data-Network/rapidcycler", build_vignettes = TRUE)
+```
+
+### Dependencies 
+
+There are several other R packages which need to be installed before installing *rapidcycler*:
+
+* arrow
+* clock
+* data.table
+* dplyr
+* fst
+* magrittr
+* rlang
+* stringr
+
+### Loading and using
+
+Once the package has been installed, it can be loaded and used in the same way as any R package. There are two main ways to do this:
+
+1. Load the whole package and its functions using `library(rapidcycler)`. You can then call functions by name, e.g. `aggregate_data()`.
+
+2. Use specific functions only with the `::` notation, e.g. `rapidcycler::aggregate_data()`.
+
+The functions you can access using the above methods are called exported functions, and are the primary functions that you should interact with. However, there are also many non-exported, internal functions, which do a lot of work behind the scenes. These functions are also documented (see the 'Reference' tab on the website, or help page in RStudio), and can be accessed using the `:::` notation. For example, `rapidcycler:::convert_date_to_number(date)`, will convert a Date object to an 8-digit integer representation of that date. It is not necessary to explore or explicitly use these functions, but they are there if you wish to.
+
+### Where to go for help (vignettes)
+
+The 'Articles' tab contains several tutorials / vignettes to help get you started. You can also browse all vignettes using `browseVignettes("rapidcycler")` in RStudio.
+
+## Package structure
+
+The package currently includes three functional modules:
+
+1. **Aggregate** — aggregate line list data into an appropriate, de-identified format for sharing (`aggregate_data()`, `resume_cycle_aggregation()`)
+
+2. **Validate** — validate the input datasets before performing aggregation (`validate_input_data()`)
+
+3. **Generate** — generate synthetic input data for testing and illustrative purposes (`generate_synthetic_data()` and sub-functions)
+
+Future versions are planned to include functions for sequential analysis (MaxSPRT), visualisation, and reporting.
+
+## Recommended folder structure
+
+The following folder structure is recommended to ensure smooth operation of all the package functions. This is particularly important for the analysis stage, so sites involved in a multi-site study do not need to strictly adhere to this structure, however it is recommended.
+
+The STUDY, SUBSTUDY, and SUBANALYSIS folders can be named however you like. The AESI folders should follow the AESI coding scheme used in the options.txt file. The data and analysis folders should be named as such. Finally, the name of the output folders from aggregation should not be changed.
+
+**Difference between SUBSTUDY and SUBANALYSIS**
+The key difference is that subanalyses must all use the same aggregated data. Therefore, they need to be definable within the columns available in the aggregate data (e.g. age groups, sex, vaccine brands). Different definitions of the historical period (e.g. seasonal, selected years) can also be defined as subanalyses.
+
+A substudy should be used if a different source of aggregated data is required. For example, if you want to run two analyses, one of which looks at coadministration of different vaccines and another looks at vaccine platforms, these can't both be defined within a single definition of V_TYPE and V_SUBTYPE, so should be defined as substudies with separate aggregated data. If you are running a separate analysis each year (e.g. flu), each year should also be a separate substudy.
+
+```
+RCA
+│
+└───STUDY (e.g. COVID)
+    │
+    └───SUBSTUDY (e.g. COADMIN)   <------- working directory
+    |   │   options.txt
+    |   |
+    |   └───data
+        |   |
+        |   └───RCA_[STUDY]_[SITE_CODE]_[CYCLE_START]-[CYCLE_END]   <------- zip and share with coordinating centre in multi-site study
+    |   |   |   │   data_self_pre.parquet
+    |   |   |   │   data_self_post.parquet
+    |   |   |   │   data_exposed_person_days.parquet
+    |   |   |   │   data_exposed_cases.parquet
+    |   |   |   │   data_descriptive_vaccinations.parquet
+    |   |   |   │   data_descriptive_outcomes.parquet
+    |   |   |   │   data_concurrent_vac.parquet
+    |   |   |   │   data_concurrent_unvac.parquet
+    |   |   |   │   notes.txt
+    |   |   |
+    |   |   └───RCA_[STUDY]_[SITE_CODE]_[CYCLE_START]-[CYCLE_END]   <------- zip and share with coordinating centre in multi-site study
+    |   |   |   │   data_self_pre.parquet
+    |   |   |   │...
+    |   |   |
+    |   |   |...
+    |   |
+    |   └───analysis
+    |   |   |
+    |   |   └───SUBANALYSIS (e.g. PRIMARY)
+    |   |   |   | 
+    |   |   |   └───AESI (e.g. GBS)
+    |   |   |   |
+    |   |   |   |...
+    |   |   |   |
+    |   |   |   |...
+    |   |   |
+    |   |   |...
+    |   |   
+    |   |...   
+    |   
+    |...
+```
+
+
+## Citation
+
+If you use *rapidcycler* in your work, please cite it as:
+
+
+```
+To cite package 'rapidcycler' in publications use:
+
+  Atkins B (2026). _rapidcycler: Rapid Cycle Analysis (RCA) for a
+  Global Network_. R package version 1.3,
+  <https://global-vaccine-data-network.github.io/rapidcycler/>.
+
+A BibTeX entry for LaTeX users is
+
+  @Manual{,
+    title = {{rapidcycler}: Rapid Cycle Analysis (RCA) for a Global Network},
+    author = {Benjamin David Atkins},
+    year = {2026},
+    note = {R package version 1.3},
+    url = {https://global-vaccine-data-network.github.io/rapidcycler/},
+  }
+```
+
+## About
+
+*rapidcycler* is developed and maintained by [Benjamin Atkins](https://orcid.org/0000-0002-3746-8374) at the [Murdoch Children's Research Institute (MCRI)](https://www.mcri.edu.au/), for [Global Vaccine Data Network (GVDN)](https://globalvaccinedatanetwork.org/).
+
+GVDN is an international multi-country collaboration for the monitoring of vaccine safety and effectiveness, connecting health data from countries across the globe to enable rapid, high-quality vaccine safety surveillance.
+
+Licensed under the [GPL-2 License](LICENSE.md).
+
+

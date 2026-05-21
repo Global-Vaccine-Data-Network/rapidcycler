@@ -1,0 +1,140 @@
+---
+title: "Validation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{validate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The purpose of validation is to ensure that the input datasets required for aggregation are in the correct format. The primary function for validation is `validate_input_data()`. This function is called automatically when you run `aggregate_data()`, so it is not necessary to perform validation manually. However, running validation separately before aggregation is useful for catching data issues early, especially when working with large datasets.
+
+### What is checked
+
+Validation covers four main areas:
+
+**Person data**
+
+- All required columns are present (`PID`, `DOB`, `SEX`) and optional columns (`ENROL_DATE`, `CENSOR_DATE`, `CENSOR_TYPE`) are correctly typed if present
+- `PID` values are unique (no duplicate persons)
+- Date columns (`DOB`, `ENROL_DATE`, `CENSOR_DATE`) are stored as 8-digit integers in `yyyymmdd` format
+- Date consistency: `DOB` ≤ `ENROL_DATE` ≤ `CENSOR_DATE`
+- `CENSOR_TYPE` values are from the allowed set (`"missing"`, `"dead"`, `"travelled"`, `"emigrated"`)
+- At least some persons are active during the cycle period
+
+**Vaccination data** (skipped if `vaccination_data = NULL`)
+
+- All required columns are present (`PID`, `V_DATE`, `V_SUBTYPE`) and correctly typed
+- All `PID` values exist in `person_data`
+- `V_DATE` is in valid 8-digit integer format
+- `V_SUBTYPE` codes match those defined in the options file
+- Vaccination dates fall within each person's active period (after `ENROL_DATE`, before `CENSOR_DATE`)
+
+**Outcome data**
+
+- All required columns are present (`PID`, `AESI`, `EVENT_DATE`, `ENCOUNTER_TYPE`) and correctly typed
+- All `PID` values exist in `person_data`
+- `AESI` codes match those defined in the options file
+- `EVENT_DATE` is in valid 8-digit integer format
+- Event dates fall within each person's active period
+
+**Lookback coverage**
+
+Checks that outcome data extends far enough back before the first vaccination (or cycle start, for historical aggregation) to satisfy the lookback requirement. By default, at least 75% of the configured lookback period (default: 2 years) must be covered. If insufficient coverage is detected, an interactive prompt allows you to provide a custom lookback start date to confirm awareness of the limitation.
+
+### Return value
+
+`validate_input_data()` returns a character vector of issue descriptions. An empty vector means no issues were found and the data is ready for aggregation. When issues are present, each entry describes a specific problem to address.
+
+```{r, eval=FALSE}
+issues <- validate_input_data(person_data, vaccination_data, outcome_data,
+                              cycle_start_date = as.Date("2022-01-01"),
+                              cycle_end_date = as.Date("2022-01-31"))
+
+if (length(issues) == 0) {
+  message("No issues found.")
+} else {
+  print(issues)
+}
+```
+
+### Options file
+
+`validate_input_data()` reads the same `options.txt` file as `aggregate_data()` — it uses this to check that vaccine subtype codes and AESI codes in the input data match those defined for the study. The `options_file_location` parameter specifies the folder containing `options.txt` and defaults to the current working directory (`getwd()`). You can also supply a pre-parsed options object directly via the `options` parameter (see `?read_options_file`).
+
+### Set up for examples
+
+Load the package:
+
+```{r setup, message=FALSE}
+library(rapidcycler)
+library(dplyr)
+library(magrittr)
+```
+
+If you would like to use synthetic data to run the examples, you can create and save that in the current working directory with the code below:
+
+```{r, eval=FALSE}
+generate_synthetic_data(pop_size = 1000000)
+```
+
+Or, if you already have some data saved in the current working directory, load it as so:
+
+```{r, eval=FALSE}
+person_data <- data.table::fread("person_data.csv")
+vaccination_data <- data.table::fread("vaccination_data.csv")
+outcome_data <- data.table::fread("outcome_data.csv")
+```
+
+### Example: Valid input data
+
+```{r, eval=FALSE}
+# options.txt is assumed to be in the current working directory
+validate_input_data(person_data, vaccination_data, outcome_data,
+                    cycle_start_date = as.Date("2022-01-01"),
+                    cycle_end_date = as.Date("2022-01-31"))
+# Returns character(0) — no issues found
+```
+
+To specify a different location for the options file:
+
+```{r, eval=FALSE}
+validate_input_data(person_data, vaccination_data, outcome_data,
+                    cycle_start_date = as.Date("2022-01-01"),
+                    cycle_end_date = as.Date("2022-01-31"),
+                    options_file_location = "~/Documents/RCA_COVID/")
+```
+
+### Example: Invalid input data
+
+The example below introduces three deliberate errors: an incorrect column type for `DOB`, a renamed vaccination date column, and an unrecognised AESI code. The returned vector will describe each issue.
+
+```{r, eval=FALSE}
+issues <- validate_input_data(
+  person_data %>% mutate(DOB = as.character(DOB)),       # DOB should be integer, not character
+  vaccination_data %>% rename(VAC_DATE = V_DATE),        # V_DATE column missing
+  outcome_data %>% mutate(AESI = if_else(AESI == "ADEM", "ADM", AESI)), # unrecognised AESI code
+  cycle_start_date = as.Date("2022-01-01"),
+  cycle_end_date = as.Date("2022-01-31")
+)
+print(issues)
+```
+
+### Example: Historical input data
+
+When `vaccination_data = NULL`, vaccination-related checks are skipped. This is used when aggregating data from a period before the vaccination campaign began.
+
+```{r, eval=FALSE}
+validate_input_data(person_data,
+                    vaccination_data = NULL,
+                    outcome_data,
+                    cycle_start_date = as.Date("2022-01-01"),
+                    cycle_end_date = as.Date("2022-01-31"))
+```

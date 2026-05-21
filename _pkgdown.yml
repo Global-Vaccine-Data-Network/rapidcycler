@@ -1,0 +1,134 @@
+url: https://global-vaccine-data-network.github.io/rapidcycler/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#3DD9D9"
+    secondary: "#1A3055"
+    heading-color: "#1A3055"
+    link-color: "#0B6E80"
+    link-hover-color: "#1A3055"
+    font-size-base: "0.9375rem"
+
+home:
+  title: "rapidcycler — Rapid Cycle Analysis for GVDN"
+  description: >
+    An R package for performing Rapid Cycle Analysis (RCA) as part of the
+    Global Vaccine Data Network (GVDN) vaccine safety surveillance programme.
+  links:
+  - text: GVDN website
+    href: https://globalvaccinedatanetwork.org/
+  - text: Murdoch Children's Research Institute
+    href: https://www.mcri.edu.au/
+
+navbar:
+  bg: dark
+  type: dark
+  logo: man/figures/logo.svg
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+      - text: "─── Vignettes ───"
+      - text: Getting started
+        href: articles/getting_started.html
+      - text: Aggregating data
+        href: articles/aggregate.html
+      - text: Validating data
+        href: articles/validate.html
+      - text: The options.txt file
+        href: articles/options.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/Global-Vaccine-Data-Network/rapidcycler
+      aria-label: GitHub repository
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with
+  components:
+    developed_by: |
+      <div class="footer-branding">
+      <div class="footer-logos">
+      <a href="https://www.mcri.edu.au/" title="Murdoch Children's Research Institute"><img src="https://global-vaccine-data-network.github.io/rapidcycler/MCRIlogo.png" alt="Murdoch Children's Research Institute"></a>
+      <a href="https://globalvaccinedatanetwork.org/" title="Global Vaccine Data Network"><img src="https://global-vaccine-data-network.github.io/rapidcycler/GVDNlogo.png" alt="Global Vaccine Data Network"></a>
+      </div>
+      <p>Developed by <a href="https://orcid.org/0000-0002-3746-8374">Benjamin Atkins</a>
+      at <a href="https://www.mcri.edu.au/">Murdoch Children's Research Institute</a>
+      for the <a href="https://globalvaccinedatanetwork.org/">Global Vaccine Data Network</a>.</p>
+      </div>
+
+reference:
+- title: Primary functions
+  desc: >
+    Exported functions available via `library(rapidcycler)` or the `::` notation.
+- subtitle: Aggregate
+  desc: Aggregate line-list data into a de-identified format for sharing.
+  contents:
+  - aggregate_data
+  - resume_cycle_aggregation
+  - recombine_input_data
+- subtitle: Validate
+  desc: Validate input datasets before aggregation.
+  contents:
+  - validate_input_data
+- subtitle: Generate
+  desc: Generate synthetic input datasets for testing and illustration.
+  contents:
+  - generate_synthetic_data
+- title: Internal functions
+  desc: >
+    Internal helper functions used by the primary functions, accessible via `:::`.
+    **It is not necessary to manually call any of these functions.**
+- subtitle: Aggregate
+  contents:
+  - starts_with("aggregate_data_")
+  - concurrent_final_aggregation
+- subtitle: Validate
+  contents:
+  - starts_with("validate_")
+  - -validate_input_data
+- subtitle: Generate
+  contents:
+  - starts_with("generate_")
+  - -generate_synthetic_data
+- subtitle: Vaccination formatting
+  contents:
+  - calc_vaccine_dose
+  - map_subtypes_to_type
+  - find_first_vac
+- subtitle: Date formatting
+  contents:
+  - check_date_format
+  - convert_date_to_number
+  - convert_number_to_date
+- subtitle: Time periods
+  contents:
+  - split_time_periods
+- subtitle: Clean window
+  contents:
+  - apply_clean_window
+- subtitle: Options and notes files
+  contents:
+  - read_options_file
+  - check_options_object
+  - extract_and_split_line
+  - create_notes_file
+- subtitle: Low count suppression
+  contents:
+  - suppress_low_counts
+- subtitle: Other
+  contents:
+  - combine_temp_results
+  - get_descriptives
+  - load_combine_summarise

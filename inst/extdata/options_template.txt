@@ -1,0 +1,103 @@
+---- Analysis options ----
+#
+# This file configures the rapidcycler aggregation functions for your study module.
+# In a multi-site study it is provided by the coordinating centre and should be used as-is.
+# In a single-site study, create it yourself using this template.
+# One options.txt file is used per study module (e.g. COVID, RSV).
+#
+# Format: each setting is written as   key: value
+# Multi-value fields use space-separated values on a single line.
+# Lines beginning with # are ignored.
+#
+# To use this template, copy it, rename it to options.txt, and fill in your site's values.
+# Reference: vignette("options", "rapidcycler")
+
+---- Study settings ----
+
+# A short identifier for this study module, used in output folder names.
+# Example: COVID, RSV, FLU
+study_codename: COVID
+
+# Length of the outcome lookback period, in years, measured back from the study start date.
+# Outcomes occurring in this window are used to identify prevalent (pre-existing) cases.
+# Default if omitted: 2
+lookback_length: 2
+
+# Length of each analysis cycle. One of: month, week, day
+period_length: month
+
+# Whether to align cycle periods to calendar boundaries (TRUE) or use fixed-length periods (FALSE).
+# TRUE: cycles align to month/week starts (recommended for monthly analysis).
+# FALSE: periods are measured as fixed durations from the study start.
+align_periods: TRUE
+
+# Number of decimal places retained in ratio and rate outputs.
+ratio_precision: 3
+
+# Sub-analyses to produce within each study design output.
+# Each value adds a breakdowns column to the aggregated tables.
+# Valid values (space-separated):
+#   primary              - All vaccines pooled, all doses pooled
+#   subgroup_dose        - Broken down by dose number (1st, 2nd, etc.), vaccines pooled
+#   subgroup_platform    - Broken down by vaccine type (V_TYPE), doses pooled
+#   subgroup_platform_dose - Broken down by vaccine type and dose number
+#   subgroup_brand       - Broken down by vaccine subtype/brand (V_SUBTYPE), doses pooled
+#   subgroup_brand_dose  - Broken down by vaccine subtype/brand and dose number
+included_analyses: primary subgroup_dose subgroup_platform subgroup_platform_dose subgroup_brand subgroup_brand_dose
+
+---- Age groups ----
+
+# Age group boundaries in years, space-separated, starting from 0 and ending with Inf.
+# N boundary values define N-1 age groups.
+# The number of labels must equal the number of boundaries minus one.
+age_groups.bounds: 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 Inf
+age_groups.labels: 0-4 5-9 10-14 15-19 20-24 25-29 30-34 35-39 40-44 45-49 50-54 55-59 60-64 65-69 70-74 75-79 80+
+
+---- Outcome settings ----
+#
+# Each outcome_info field is a space-separated vector, with one value per AESI.
+# All vectors must have the same length as outcome_info.AESI.
+# All time values are in DAYS.
+
+# Short codes for the Adverse Events of Special Interest (AESIs) included in this study.
+outcome_info.AESI: ADEM MYO ST
+
+# Clean window: minimum number of days before a case to confirm it is incident (not prevalent).
+# A case is excluded if a prior case of the same AESI occurred within this window.
+outcome_info.clean_window: 365 183 365
+
+# Risk window: the post-vaccination window within which cases are attributed to the exposure.
+# risk_lower is the first day of the window (usually 1, meaning the day after vaccination).
+# risk_upper is the last day of the window.
+outcome_info.risk_lower: 1 1 2
+outcome_info.risk_upper: 42 28 42
+
+# Washout windows: days immediately before (pre) and after (post) vaccination excluded from
+# control periods to avoid misclassification at the boundary of the risk window.
+outcome_info.washout_post: 7 7 7
+outcome_info.washout_pre: 7 7 7
+
+# Control period targets: the ratio of control time to risk time to aim for.
+# For example, a target of 3 means the control period will be three times the length
+# of the risk window, subject to the minimum lengths below.
+outcome_info.control_post_target: 1 1 1
+outcome_info.control_pre_target: 3 3 3
+
+# Control period minimums: shortest acceptable control period length, in days.
+# If the available control time is less than this, the observation is excluded.
+outcome_info.control_post_min: 30 30 30
+outcome_info.control_pre_min: 30 30 30
+
+---- Vaccine settings ----
+#
+# vaccine_info fields must have the same length as each other.
+# Each vaccine_subtype maps to the vaccine_type at the same position.
+
+# Vaccine subtype codes as they appear in vaccination_data$V_SUBTYPE.
+# These are the finest level of vaccine classification (e.g. specific brand or formulation).
+vaccine_info.vaccine_subtypes: ABC DEF GHI
+
+# Vaccine type codes corresponding to each subtype above.
+# This is the broader classification (e.g. mRNA, viral vector).
+# Multiple subtypes may share the same type.
+vaccine_info.vaccine_types: PABC PDEF PGHI

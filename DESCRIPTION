@@ -1,0 +1,31 @@
+Package: rapidcycler
+Title: Rapid Cycle Analysis (RCA) for a Global Network
+Version: 1.3
+Date: 2026-04-10
+Authors@R: 
+    person(given = "Benjamin", family = "Atkins", email = "ben.atkins@mcri.edu.au", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-3746-8374"))
+Description: A collection of methodologies and functions that are used to perform Rapid Cycle Analysis (RCA), developed for the Global Vaccine Data Network (GVDN). Functionality covers the whole process, from data aggregation and validation, to analysis and result visualisation.
+License: GPL-2
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Imports:
+    arrow,
+    clock,
+    data.table,
+    dplyr,
+    fst,
+    magrittr,
+    rlang,
+    stringr
+Depends: 
+    R (>= 3.5.0)
+VignetteBuilder: knitr
+Config/Needs/website: pkgdown
+URL: https://global-vaccine-data-network.github.io/rapidcycler/

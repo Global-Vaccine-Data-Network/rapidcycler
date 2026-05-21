@@ -1,0 +1,17 @@
+.Rproj.user
+.Rproj.user.old
+.Rhistory
+.RData
+.Ruserdata
+.Rdata
+.httr-oauth
+.DS_Store
+**/.DS_Store
+.quarto
+testing_script.R
+inst/doc
+.positai
+README.html
+CLAUDE.md
+.claude/
+docs/CLAUDE.html
